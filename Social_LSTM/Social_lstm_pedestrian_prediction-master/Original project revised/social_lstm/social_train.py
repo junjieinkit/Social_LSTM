@@ -154,7 +154,7 @@ def train(args):
                     x_batch, y_batch, d_batch = x[each_seq], y[each_seq], d[each_seq]
 
                     if d_batch == 0 and datasets[0] == 0:
-                        dataset_data = [640, 480]  #QUESTION   why？
+                        dataset_data = [640, 480]  #QUESTION   why？？
                     else:
                         dataset_data = [720, 576]
 
