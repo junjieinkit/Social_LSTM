@@ -125,6 +125,9 @@ git commit -m "first commit"
 删除本地分支：git branch -d <branch name>
 切换分支：git switch <branch name>
 查看(本地)提交记录：git log
+回到以前的版本：
+git reset --hard xxx(版本号或版本号前几位)，回滚到指定版本号，如果是版本号前几位，git会自动寻找匹配的版本号
+git reset --hard xxx(版本号或版本号前几位) filename，回滚某个文件到指定版本号（需要进入该文件所在目录）
 
 创建远程分支并将本地分支的东西传到该分支上 git push origin dev:dev  （注意：冒号前为远程分支，冒号后为本地分支，两者必须同名）
 
