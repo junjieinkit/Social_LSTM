@@ -124,6 +124,8 @@ git commit -m "first commit"
 查看所有分支（包括远程): git branch -a
 删除本地分支：git branch -d <branch name>
 切换分支：git switch <branch name>
+查看(本地)提交记录：git log
+
 创建远程分支并将本地分支的东西传到该分支上 git push origin dev:dev  （注意：冒号前为远程分支，冒号后为本地分支，两者必须同名）
 
 git remote -v 查看origin指向哪个远程repository（当初git clone的那个）
