@@ -1,0 +1,7 @@
+Le modifiche apportate per aggiungere l'array sociale hanno modificato solo i seguenti file:
+修改个人文件后的文件，请按照以下步骤操作：
+    -social_model.py
+    -grid.py
+
+Pertanto tutti gli altri file sono rimasti immutati, mentre in questi file sono stati eliminati tutti i commenti originali e aggiunti quelli relativi all'implementazione
+因此，所有其他文件保持不变，而在这些文件中，所有原始注释以及与实现相关的注释均已删除。

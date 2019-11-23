@@ -1,0 +1,140 @@
+#安装中文输入法：
+sudo apt-get install ibus-pinyin 
+ibus restart
+
+#安装pycharm
+sudo snap install pycharm-community --classic
+
+
+#安装NVIDIA显卡驱动
+参考https://blog.csdn.net/QLULIBIN/article/details/79947062。使用方法一，即图形界面安装驱动。
+命令nvidia-smi查看显卡状态
+
+#安装Anaconda包管理器和环境管理器）
+1.在官网上下载https://www.anaconda.com/distribution/#download-section
+2.bash Anaconda3-5.0.0-Linux-x86_64.sh  参考https://blog.csdn.net/qq1483661204/article/details/78201451
+3.并没有按照上述网站所述的，在/etc/profile中写入路径。但是/.bashrc中仍然有Anaconda的信息。且每次打开terminal前面都有一个（base）这是因为您没有指定特定的环境，所以默认为（base）,参考https://askubuntu.com/questions/1026383/why-does-base-appear-in-front-of-my-terminal-prompt。
+至此顺利安装Anaconda，使用命令conda --version查看版本得4.7.12
+*使用conda安装其他包，由于现在在国外，下载速度还可以，不需要使用国内的镜像
+
+
+#Anaconda 常用指令
+conda create -n py36 python=3.6
+conda activate py36
+conda deactivate
+conda env remove -n py36
+conda env list
+conda info --envs
+conda list 查看安装了什么包	
+
+#安装tensorflow
+conda 安装将自动安装 GPU 支持所需的 CUDA 和 CuDNN 库。pip 安装则需要手动安装这些库。
+使用 pip 安装 TensorFlow 时，GPU 支持所需的 CUDA 和 CuDNN 库必须单独手动安装，增加了大量负担。而使用 conda 安装 GPU 加速版本的 TensorFlow 时，只需使用命令 conda install tensorflow-gpu，这些库就会自动安装成功，且版本与 tensorflow-gpu 包兼容。不管使用 pip 还是 conda 安装 GPU 支持的 TensorFlow，NVIDIA 驱动程序都必须单独安装。
+以下参考https://zhuanlan.zhihu.com/p/77494679
+1.conda create -n tensorflow python=3.6   创建一个名叫tensorflow的虚拟环境，环境中使用python3.6。
+环境中的一些包已经被安装好，例如python-3.6.9，pip-19.3.1，setuptools-41.6.0等
+2.activate tensorflow   激活名为tensorflow的虚拟环境
+  conda info --envs     查看t虚拟环境ensorflow是不是成功创建了，如果成功，会看到已有的两个虚拟环境（base和tensorflow）
+激活成功后变成(tensorflow) jj@jj:~$ 
+3.
+尝试一：
+运行了以下指令之后我怀疑我装了tensorflow的cpu和gpu两个版本
+3.1 参考https://blog.csdn.net/tterminator/article/details/84728775
+在tensorflow下运行pip install tensorflow， 此处怀疑安装的是cpu版本。
+3.2 在已激活的虚拟环境下安装GPU版本的tensorflow（参考https://www.jianshu.com/p/dc648fee7c59）
+3.2.1 conda上查找tensorflow资源，conda search tensorflow-gpu；
+3.2.2 使用命令conda install --channel https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main tensorflow-gpu=1.9.0安装tensorflow-gpu 1.9.0版本（可见是清华的镜像）
+可见numpy,cudnn，cudaoolkit-9.将被安装
+出现错误！！！  URL出现错误，让我重试，但是重试后不像是之前的状态。于是删除tensorflow这个虚拟环境。重新安装tensorflow虚拟环境。
+
+尝试二：
+conda create -n tensorflow python=3.6
+pip install tensorflow-gpu   这时候就不是用清华的镜像了，而是默认的（外国的镜像）
+（
+Collecting tensorflow-gpu
+  Downloading https://files.pythonhosted.org/packages/25/44/47f0722aea081697143fbcf5d2aa60d1aee4aaacb5869aee2b568974777b/tensorflow_gpu-2.0.0-cp36-cp36m-manylinux2010_x86_64.whl (380.8MB)
+）  可见tensorflow_gpu的版本是2.0.0
+pip show tensorflow_gpu 可以查看tensorflow_gpu 的版本信息和安装路径（在名为tensorflow的虚拟环境中Location: /home/jj/anaconda3/envs/tensorflow/lib/python3.6/site-packages）
+但是默认的镜像中不包含cuda,cndnn等包
+
+尝试三：
+参考https://www.anaconda.com/tensorflow-in-anaconda/
+conda create -n tensorflow_gpuenv tensorflow-gpu
+conda activate tensorflow_gpuenv
+conda list (可以看到cudnn，cudaoolkit已经被安装)
+成功！！！！
+
+#将Anaconda配置到pycharm
+参考https://blog.csdn.net/s09094031/article/details/82747177
+在file-->setting-->project interpreter-->Virualenv Environment中选择Existing environment然后选择路径
+注意路径是~/anaconda3/envs/tensorflow_gpuenv/bin/python
+测试tensorflow gpu安装成功与否：（参考https://blog.csdn.net/linhai1028/article/details/79525507）
+成功！！
+
+
+#使用tensorboard
+1.在Terminal中进入虚拟环境（tensorflow_gpuenv）,进入路径~/anaconda3/envs/tensorflow_gpuenv/lib/python3.7/site-packages/tensorboard
+2.运行tensorboard --logdir="~/PycharmProjects/untitled/"（即logs所在的路径）
+3.右键打开生成的网络链接
+
+
+#安装拼音输入法：
+参考一：https://blog.csdn.net/suifenghahahaha/article/details/78723733
+参考二：https://blog.csdn.net/weixin_44741023/article/details/101389329 （因为之前用了fcitx下的sogou输入法，估计是因为fcitx和ibus有冲突，所以要卸载fcitx）
+
+
+#打开任务管理器
+命令行输入:gnome-system-monitor
+
+#在命令行运行python出现中文注释无法编码的问题：
+解决方法：在有中文注释的.py文件前，添加一行 # coding:utf-8
+
+#如何使用parser
+1.进入到.py文件所在的文件夹
+2.1 在命令行运行：python xxx.py --option input(如果在.py文件中，已经定义好--option的话)（input是自己想要输入的值）
+2.2 如果想使用.py文件中Default的值，直接运行python xxx.py就行
+
+#查看内存
+命令行指令：top
+
+#查看显卡
+命令行：nvidia -smi -l 1
+
+#安装git并设置SSH
+参考：http://blog.csdn.net/qq_2699083/art
+
+#git的指令（参考：https://blog.csdn.net/bigdog_1027/article/details/78851063）
+1.1进入需要上传项目所在地址(在本电脑上我设置为gitupload)
+git init  #这个命令可以把当前目录变成git可以管理的仓库,使用指令ls -a可以看到目录下有.git文件
+1.2 如果有需要sudo rm -r .git可以移除.git文件
+2. 将需要提交至仓库的文件从工作区添加到暂存区，告诉Git那些文件需要追踪。这里使用到的指令是：git add <file>or<folder>
+3.查看当前git的状态:git status
+4.Git 每次提交代码，都要写 Commit message（提交说明），否则就不允许提交
+git commit -m "first commit"   
+5.git remote add origin git@github.com:junjieinkit/Social_LSTM.git  添加远程文件夹的地址
+6.将本地仓库的文件push到远程仓库中，指令如下：git push -u origin master 
+7.之后可以简化为git push 或 git pull
+
+
+#git不同分支的解释
+参考https://www.liaoxuefeng.com/wiki/896043488029600/900003767775424
+常见指令：
+创建本地分支并切换到该分支：git checkout -b <branch name>
+查看本地分支：git branch
+查看所有分支（包括远程): git branch -a
+删除本地分支：git branch -d <branch name>
+切换分支：git switch <branch name>
+查看(本地)提交记录：git log
+回到以前的版本：
+git reset --hard xxx(版本号或版本号前几位)，回滚到指定版本号，如果是版本号前几位，git会自动寻找匹配的版本号
+git reset --hard xxx(版本号或版本号前几位) filename，回滚某个文件到指定版本号（需要进入该文件所在目录）
+
+创建远程分支并将本地分支的东西传到该分支上 git push origin dev:dev  （注意：冒号前为远程分支，冒号后为本地分支，两者必须同名）
+
+git remote -v 查看origin指向哪个远程repository（当初git clone的那个）
+
+
+
+
+
+
