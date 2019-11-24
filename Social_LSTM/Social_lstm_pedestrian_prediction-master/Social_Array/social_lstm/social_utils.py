@@ -1,3 +1,4 @@
+# coding=utf-8
 '''
 Utils script for the social LSTM implementation
 Handles processing the input and target data in batches and sequences
@@ -26,7 +27,7 @@ class SocialDataLoader():
         forcePreProcess : Flag to forcefully preprocess the data again from csv files
         '''
         # List of data directories where raw data resides
-        #original: self.data_dirs = ['../data/eth/univ', '../data/eth/hotel','../data/ucy/zara/zara01', '../data/ucy/zara/zara02','../data/ucy/univ']
+        #original: self.used_data_dirs = ['../data/eth/univ', '../data/eth/hotel','../data/ucy/zara/zara01', '../data/ucy/zara/zara02','../data/ucy/univ']
         self.data_dirs = ['../data/ucy/zara/zara01', '../data/ucy/zara/zara02',
                           '../data/eth/univ', '../data/eth/hotel', '../data/ucy/univ']
 
@@ -66,13 +67,13 @@ class SocialDataLoader():
         self.reset_batch_pointer(valid=False)
         self.reset_batch_pointer(valid=True)
 
-    def frame_preprocess(self, data_dirs, data_file):
+    def frame_preprocess(self, used_data_dirs, processed_data_file):
         '''
         Function that will pre-process the pixel_pos.csv files of each dataset
         into data with occupancy grid that can be used
         params:
-        data_dirs : List of directories where raw data resides
-        data_file : The file into which all the pre-processed data needs to be stored
+        used_data_dirs : List of directories where raw data resides
+        processed_data_file : The file into which all the pre-processed data needs to be stored
         '''
 
         # all_frame_data would be a list of numpy arrays corresponding to each dataset
@@ -91,7 +92,7 @@ class SocialDataLoader():
         dataset_index = 0
 
         # For each dataset
-        for directory in data_dirs:
+        for directory in used_data_dirs:
 
             # Define path of the csv file of the current dataset
             # file_path = os.path.join(directory, 'pixel_pos.csv')
@@ -172,7 +173,7 @@ class SocialDataLoader():
             dir+=1
 
         # Save the tuple (all_frame_data, frameList_data, numPeds_data) in the pickle file
-        f = open(data_file, "wb")
+        f = open(processed_data_file, "wb")
         pickle.dump((all_frame_data, frameList_data, numPeds_data, valid_frame_data), f, protocol=2)
         f.close()
 
@@ -180,7 +181,7 @@ class SocialDataLoader():
         '''
         Function to load the pre-processed data into the DataLoader object
         params:
-        data_file : the path to the pickled data file
+        processed_data_file : the path to the pickled data file
         '''
         # Load data from the pickled file
         f = open(data_file, 'rb')

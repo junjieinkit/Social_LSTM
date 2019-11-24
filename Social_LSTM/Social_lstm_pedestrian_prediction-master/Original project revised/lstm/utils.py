@@ -18,7 +18,7 @@ class DataLoader():
         self.data_dirs = ['../data/eth/univ', '../data/eth/hotel',
                           '../data/ucy/zara/zara01', '../data/ucy/zara/zara02',
                           '../data/ucy/univ']
-        # self.data_dirs = ['./data/eth/univ', './data/eth/hotel']
+        # self.used_data_dirs = ['./data/eth/univ', './data/eth/hotel']
 
         self.used_data_dirs = [self.data_dirs[x] for x in datasets]
 
@@ -48,8 +48,8 @@ class DataLoader():
         The function that pre-processes the pixel_pos.csv files of each dataset
         into data that can be used
         params:
-        data_dirs : List of directories where raw data resides
-        data_file : The file into which all the pre-processed data needs to be stored
+        used_data_dirs : List of directories where raw data resides
+        processed_data_file : The file into which all the pre-processed data needs to be stored
         '''
         # all_ped_data would be a dictionary with mapping from each ped to their
         # trajectories given by matrix 3 x numPoints with each column
@@ -97,7 +97,7 @@ class DataLoader():
         '''
         Function to load the pre-processed data into the DataLoader object
         params:
-        data_file : The path to the pickled data file
+        processed_data_file : The path to the pickled data file
         '''
         # Load data from the pickled file
         f = open(data_file, "rb")

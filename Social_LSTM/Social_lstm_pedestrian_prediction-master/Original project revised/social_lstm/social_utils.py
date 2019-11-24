@@ -19,7 +19,7 @@ import random
 class SocialDataLoader():
 
     def __init__(self, batch_size=50, seq_length=5, maxNumPeds=70, datasets=[0, 1, 2, 3, 4], forcePreProcess=False, infer=False):
-        '''
+        '''                         #QUESTION： seq_length=5这么少吗？
         Initialiser function for the SocialDataLoader class
         params:
         batch_size : Size of the mini-batch
@@ -31,48 +31,53 @@ class SocialDataLoader():
         self.data_dirs = ['../data/ucy/zara/zara01', '../data/ucy/zara/zara02','../data/eth/univ', '../data/eth/hotel', '../data/ucy/univ']
 
         self.used_data_dirs = [self.data_dirs[x] for x in datasets]
-        self.infer = infer
+        self.infer = infer  #QUESTION： 这个东西有什么用
 
         # Number of datasets
-        self.numDatasets = len(self.data_dirs)
+        self.numDatasets = len(self.data_dirs)   #5个数据集
 
         # Data directory where the pre-processed pickle file resides
         self.data_dir = '../data'
 
         # Maximum number of peds in a single frame (Number obtained by checking the datasets)
-        self.maxNumPeds = maxNumPeds
+        self.maxNumPeds = maxNumPeds  #定义为70        #QUESTION：设置这个有什么用
 
         # Store the arguments
-        self.batch_size = batch_size
-        self.seq_length = seq_length
+        self.batch_size = batch_size  #50
+        self.seq_length = seq_length  #5
 
         # Validation arguments
-        self.val_fraction = 0.2
+        self.val_fraction = 0.2  #QUESTION：有什么用
+                                #20%的帧数作为验证
         self.takeOneInNFrames = 6
 
         # Define the path in which the process data would be stored
-        data_file = os.path.join(self.data_dir, "social-trajectories.cpkl")
+        processed_data_file= os.path.join(self.data_dir, "social-trajectories.cpkl")   #路径组合拼接
 
         # If the file doesn't exist or forcePreProcess is true
-        if not(os.path.exists(data_file)) or forcePreProcess:
+        if not(os.path.exists(processed_data_file)) or forcePreProcess:     #os.path.exists（） 如果路径存在返回1
             print("Creating pre-processed data from raw data")
             # Preprocess the data from the csv files of the datasets
             # Note that this data is processed in frames
-            self.frame_preprocess(self.used_data_dirs, data_file)
+            self.frame_preprocess(self.used_data_dirs, processed_data_file)
+
 
         # Load the processed data from the pickle file
-        self.load_preprocessed(data_file)
+        self.load_preprocessed(processed_data_file)
         # Reset all the data pointers of the dataloader object
         self.reset_batch_pointer(valid=False)
         self.reset_batch_pointer(valid=True)
 
-    def frame_preprocess(self, data_dirs, data_file):
+    def frame_preprocess(self, used_data_dirs, data_file):
         '''
         Function that will pre-process the pixel_pos.csv files of each dataset
-        into data with occupancy grid that can be used
+        into data with occupancy grid that can be used     #QUESTION: occupancy grid 是什么？
+        对所有数据集进行处理。对于每个数据集，每隔takeOneInNFrames取该帧数据
+        将该帧内的新人数据（pedID，x，y）存入all_frame_data和valid_frame_data
+        最后预处理好的数据存入data_file文件中
         params:
-        data_dirs : List of directories where raw data resides
-        data_file : The file into which all the pre-processed data needs to be stored
+        used_data_dirs : List of directories where raw data resides
+        processed_data_file : The file into which all the pre-processed data needs to be stored
         '''
 
         # all_frame_data would be a list of numpy arrays corresponding to each dataset
@@ -81,41 +86,51 @@ class SocialDataLoader():
         all_frame_data = []
         # Validation frame data
         valid_frame_data = []
+
         # frameList_data would be a list of lists corresponding to each dataset
         # Each list would contain the frameIds of all the frames in the dataset
         frameList_data = []
-        # numPeds_data would be a list of lists corresponding to each dataset
+
+        # numPeds_in_deff_dataset would be a list of lists corresponding to each dataset
         # Ech list would contain the number of pedestrians in each frame in the dataset
-        numPeds_data = []
+        numPeds_in_deff_dataset = []
         # Index of the current dataset
         dataset_index = 0
 
         # For each dataset
-        for directory in data_dirs:
+        for directory in used_data_dirs:
 
             # Define path of the csv file of the current dataset
             # file_path = os.path.join(directory, 'pixel_pos.csv')
             file_path = os.path.join(directory, 'pixel_pos_interpolate.csv')
             # Load the data from the csv file
-            data = np.genfromtxt(file_path, delimiter=',')
+            data = np.genfromtxt(file_path, delimiter=',')  #以逗号为分隔点，将文档内的内容转换为数组 #ATTENTION：将文档内容转换成数组
+
             # Frame IDs of the frames in the current dataset
-            frameList = np.unique(data[0, :]).tolist()
-            # Calcolo del numero di frame, che pero' deve essere un numero divisibile per tekeOneInNFrames
+            # 如这个dataset共100帧，这frameList=【0,2,.....,99】
+            frameList = np.unique(data[0, :]).tolist()    #np.unique该函数是去除数组中的重复数字，并进行排序之后输出
+                                                          #.tolist： 讲数组或矩阵转换为列表
+
+
+            # 将numFrames变成可被takeOneInNFrames整除的数
             numFrames = int(len(frameList) / self.takeOneInNFrames) * self.takeOneInNFrames
 
             if self.infer:
                 valid_numFrames = 0
             else:
-                # Calcolo il numero di frame di validazione, come prima questo numero deve essere divisibile per tekeOneInNFrames
+                # 计算验证帧的数量。是数据集的0.2
                 valid_numFrames = int((numFrames * self.val_fraction) / self.takeOneInNFrames) * self.takeOneInNFrames
 
             # Add the list of frameIDs to the frameList_data
-            frameList_data.append(frameList)
+            frameList_data.append(frameList)  #frameList_data是一个List of list, list中的每个元素是某一个数据集的frameList
+
             # Initialize the list of numPeds for the current dataset
-            numPeds_data.append([])
+            numPeds_in_deff_dataset.append([])
+
             # Initialize the numpy array for the current dataset
             # La grandezza dell'array deve essere divisibile per tekeOneInNFrames
-            all_frame_data.append(np.zeros((int((numFrames - valid_numFrames) / self.takeOneInNFrames), self.maxNumPeds, 3)))
+            all_frame_data.append(np.zeros((int((numFrames - valid_numFrames) / self.takeOneInNFrames), self.maxNumPeds, 3))) #QUESTION: 可以改成train_frame_data吗？因为他好像就是用来train的
+
             # Initialize the numpy array for the current dataset
             # Come prima la grandezza dell'array deve essere divisibile per tekeOneInNFrames
             valid_frame_data.append(np.zeros((int(valid_numFrames / self.takeOneInNFrames), self.maxNumPeds, 3)))
@@ -124,12 +139,12 @@ class SocialDataLoader():
             ind = 0
             #loop che scorre i frame a passi lunghi takeOneInNFrames
             while ind < numFrames:
-                frame = frameList[ind]
+                current_frame = frameList[ind]
                 # Extract all pedestrians in current frame
-                pedsInFrame = data[:, data[0, :] == frame]
+                pedsInFrame = data[:, data[0, :] == current_frame]   #某帧中的行人全部同时提取出来  #ATTENTION：注意这个用法，值得学习
 
                 # Extract peds list
-                pedsList = pedsInFrame[1, :].tolist()
+                pedsList = pedsInFrame[1, :].tolist()   #第二行，即此处的1，是pedestrian ID。此时pedsList是一个列表，【1,....,len(pedsList)】
 
                 # Helper print statement to figure out the maximum number of peds in any frame in any dataset
                 # if len(pedsList) > 1:
@@ -138,23 +153,23 @@ class SocialDataLoader():
                 #    continue
 
                 # Add number of peds in the current frame to the stored data
-                numPeds_data[dataset_index].append(len(pedsList))
+                numPeds_in_deff_dataset[dataset_index].append(len(pedsList))
 
                 # Initialize the row of the numpy array
                 pedsWithPos = []
 
-                # For each ped in the current frame
-                for ped in pedsList:
+                # For each PedID in the current frame
+                for PedID in pedsList:
                     # Extract their x and y positions
-                    current_x = pedsInFrame[3, pedsInFrame[1, :] == ped][0]
-                    current_y = pedsInFrame[2, pedsInFrame[1, :] == ped][0]
+                    current_x = pedsInFrame[3, pedsInFrame[1, :] == PedID][0]
+                    current_y = pedsInFrame[2, pedsInFrame[1, :] == PedID][0]
 
                     # Add their pedID, x, y to the row of the numpy array
-                    pedsWithPos.append([ped, current_x, current_y])
+                    pedsWithPos.append([PedID, current_x, current_y])
 
-                if (ind >= valid_numFrames) or (self.infer):
+                if (ind >= valid_numFrames) or (self.infer):#QUESTION： 为什么是数据前部分是验证集，后面是训练集？
                     # Add the details of all the peds in the current frame to all_frame_data
-                    # l'indice deve essere diviso per takeOneInNFrames
+                    # l'indice deve essere diviso per takeOneInNFrames                             #QUESTION： 将数组内容传到训练集？
                     all_frame_data[dataset_index][int((ind - valid_numFrames)/self.takeOneInNFrames), 0:len(pedsList), :] = np.array(pedsWithPos)
                 else:
                     # l'indice deve essere diviso per takeOneInNFrames
@@ -164,19 +179,19 @@ class SocialDataLoader():
             # Increment the dataset index
             dataset_index += 1
 
-        # Save the tuple (all_frame_data, frameList_data, numPeds_data) in the pickle file
-        f = open(data_file, "wb")
-        pickle.dump((all_frame_data, frameList_data, numPeds_data, valid_frame_data), f, protocol=2)
+        # Save the tuple (all_frame_data, frameList_data, numPeds_in_deff_dataset) in the pickle file
+        f = open(data_file, "wb")       #processed_data_file : The file into which all the pre-processed data needs to be stored
+        pickle.dump((all_frame_data, frameList_data, numPeds_in_deff_dataset, valid_frame_data), f, protocol=2) # protocol=2 理解为定义文件写入效率较高
         f.close()
 
-    def load_preprocessed(self, data_file):
+    def load_preprocessed(self, processed_data_file):
         '''
         Function to load the pre-processed data into the DataLoader object
         params:
-        data_file : the path to the pickled data file
+        processed_data_file : the path to the pickled data file
         '''
         # Load data from the pickled file
-        f = open(data_file, 'rb')
+        f = open(processed_data_file, 'rb')
         self.raw_data = pickle.load(f)
         f.close()
 

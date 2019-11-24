@@ -76,7 +76,7 @@ def main():
 def train(args):
     datasets = range(5)
     # Remove the leaveDataset from datasets
-    datasets.remove(args.leaveDataset)
+    datasets.remove(args.leaveDataset)  #dataset=[1,2,3,4]
 
     # Create the SocialDataLoader object
     data_loader = SocialDataLoader(args.batch_size, args.seq_length, args.maxNumPeds, datasets, forcePreProcess=True, infer=False)

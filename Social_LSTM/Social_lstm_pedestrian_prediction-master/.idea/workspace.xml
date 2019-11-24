@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="4756fbb1-ebca-4888-a461-d71faf734e96" name="Default Changelist" comment="" />
+    <list default="true" id="4756fbb1-ebca-4888-a461-d71faf734e96" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Original project revised/lstm/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Original project revised/lstm/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Original project revised/social_lstm/social_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/Original project revised/social_lstm/social_train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Original project revised/social_lstm/social_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Original project revised/social_lstm/social_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Social_Array/social_lstm/social_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Social_Array/social_lstm/social_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/try.py" beforeDir="false" afterPath="$PROJECT_DIR$/try.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,10 +23,15 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
   <component name="ProjectId" id="1TkGu27YuFK3wCXBPBGSLgGojpn" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="preferences.toDoOptions" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -116,6 +129,17 @@
       <updated>1573996898201</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
