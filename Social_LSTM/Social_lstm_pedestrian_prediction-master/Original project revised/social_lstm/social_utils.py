@@ -111,7 +111,6 @@ class SocialDataLoader():
             frameList = np.unique(data[0, :]).tolist()    #np.unique该函数是去除数组中的重复数字，并进行排序之后输出
                                                           #.tolist： 讲数组或矩阵转换为列表
 
-
             # 将numFrames变成可被takeOneInNFrames整除的数
             numFrames = int(len(frameList) / self.takeOneInNFrames) * self.takeOneInNFrames
 
@@ -233,40 +232,64 @@ class SocialDataLoader():
         d = []
         # Iteration index
         i = 0
+
+        '''
+        共batch_size个序列，每个序列又包含seq_length帧，每帧中包含maxNumpeds个行人，每个行人有3维的信息
+        return: x_batch, y_batch, d    其中x_batch,y_batch 共有batch_size维
+        '''
         while i < self.batch_size:
             # Extract the frame data of the current dataset
             frame_data = self.data[self.dataset_pointer]
+            #frame_data.shape=(694,70,3)        len(self.data)=4
+
+
+
             # Get the frame pointer for the current dataset
             idx = self.frame_pointer
             # While there is still seq_length number of frames left in the current dataset
             if idx + self.seq_length < frame_data.shape[0]:
                 # All the data in this sequence
-                seq_frame_data = frame_data[idx:idx+self.seq_length+1, :]    #QUESTION 这里有什么玄机？
-                seq_source_frame_data = frame_data[idx:idx+self.seq_length, :] #QUESTION idx:idx的冒号有什么用
+                seq_frame_data = frame_data[idx:idx+self.seq_length+1, :]   #第一维度切片从idx到idx+seq_length+1
+                #seq_frame_data.shape=(3,70,3)=(seq_length+1,maxNumpeds,3)
+
+                seq_source_frame_data = frame_data[idx:idx+self.seq_length, :]
+
                 seq_target_frame_data = frame_data[idx+1:idx+self. seq_length+1, :]
+
+
                 # Number of unique peds in this sequence of frames
-                pedID_list = np.unique(seq_frame_data[:, :, 0])
-                numUniquePeds = pedID_list.shape[0]
+                pedID_list = np.unique(seq_frame_data[:, :, 0])  #提取数组中不重复的数，并输出到列表中
+                numUniquePeds = pedID_list.shape[0]  #在当前的数据集中（注意不是当前的frame），共出现过多少个（不重复的）行人
 
                 sourceData = np.zeros((self.seq_length, self.maxNumPeds, 3))
                 targetData = np.zeros((self.seq_length, self.maxNumPeds, 3))
 
+
+                '''
+                下面这个循环的作用就是提取当前帧和下一帧中，依旧存在的行人的位置，以便制作有效的训练集
+                '''
                 for seq in range(self.seq_length):
-                    sseq_frame_data = seq_source_frame_data[seq, :]
+                    sseq_frame_data = seq_source_frame_data[seq, :]  #其实等价于sseq_frame_data = seq_source_frame_data[seq, :,:]
+                    #sseq_frame_data.shape=(70,3)
                     tseq_frame_data = seq_target_frame_data[seq, :]
+
 
                     if numUniquePeds > self.maxNumPeds:
                         print ("Max num peds surpassed: " + str(numUniquePeds) + " out of " + str(self.maxNumPeds))
                         numUniquePeds = self.maxNumPeds
 
-                    for ped in range(numUniquePeds):
+                    for ped in range(numUniquePeds):    #对某序列内所有帧中出现过的行人
                         pedID = pedID_list[ped]
 
-                        if pedID == 0:
+                        if pedID == 0:   #如果这个行人丢失了（消失了）
                             continue
                         else:
-                            sped = sseq_frame_data[sseq_frame_data[:, 0] == pedID, :]
+                            sped = sseq_frame_data[sseq_frame_data[:, 0] == pedID, :]    #取出这个（在现在和下一帧都存在）行人的位置
+                            #如sped = [[ 8.      -0.14592  0.49339]]
+
                             tped = np.squeeze(tseq_frame_data[tseq_frame_data[:, 0] == pedID, :])
+                            #如tped = [ 8.      -0.14562  0.49158]
+
                             if sped.size != 0:
                                 sourceData[seq, ped, :] = sped
                             if tped.size != 0:
@@ -390,3 +413,4 @@ class SocialDataLoader():
         else:
             self.valid_dataset_pointer = 0
             self.valid_frame_pointer = 0
+

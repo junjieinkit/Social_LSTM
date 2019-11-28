@@ -5,7 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/Goal+Socail_Array/social_lstm" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Original project revised/lstm" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 2.7 (nn-trajectory-prediction-master)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 2.7 (Social_LSTM)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="TestRunnerService">
