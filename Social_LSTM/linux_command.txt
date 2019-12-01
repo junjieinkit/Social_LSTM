@@ -113,7 +113,7 @@ git init  #这个命令可以把当前目录变成git可以管理的仓库,使�
 4.Git 每次提交代码，都要写 Commit message（提交说明），否则就不允许提交
 git commit -m "first commit"   
 5.git remote add origin git@github.com:junjieinkit/Social_LSTM.git  添加远程文件夹的地址
-6.将本地仓库的文件push到远程仓库中，指令如下：git push -u origin master 
+6.将本地仓库的文件push到远程仓库中，指令如下：git push -u origin dev (注意这里不用git push -u origin master 可能是因为master不能被改变(除了merge?) )
 7.之后可以简化为git push 或 git pull
 
 
