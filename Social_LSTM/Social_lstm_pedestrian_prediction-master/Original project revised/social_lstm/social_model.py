@@ -130,6 +130,7 @@ class SocialModel():
             # NOTE: Using a tensor of zeros as the social tensor
             # social_tensor = tf.zeros([args.maxNumPeds, args.grid_size*args.grid_size*args.rnn_size])
 
+
             for ped in range(args.maxNumPeds):
                 print "Pedestrian Number", ped
 
@@ -162,7 +163,7 @@ class SocialModel():
                 # One step of LSTM   #为某个行人 更新状态。
                 with tf.variable_scope("LSTM") as scope:
                     if seq > 0 or ped > 0:
-                        scope.reuse_variables()
+                        scope.reuse_variables()                #ATTENTION
                     self.output_states[ped], self.initial_states[ped] = cell(complete_input, self.initial_states[ped])
                     #len(output_states)=maxNumPeds=70       self.output_states[ped].shape=（1，rnn_size）=（1，128）
                     #self.initial_states[ped].shape=(1,256)

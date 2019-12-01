@@ -2,15 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4756fbb1-ebca-4888-a461-d71faf734e96" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/Social_lstm_pedestrian_prediction-master.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Social_lstm_pedestrian_prediction-master.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Original project revised/data/social-trajectories.cpkl" beforeDir="false" afterPath="$PROJECT_DIR$/Original project revised/data/social-trajectories.cpkl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Original project revised/social_lstm/grid.py" beforeDir="false" afterPath="$PROJECT_DIR$/Original project revised/social_lstm/grid.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Original project revised/social_lstm/save/1/social_config.pkl" beforeDir="false" afterPath="$PROJECT_DIR$/Original project revised/social_lstm/save/1/social_config.pkl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Original project revised/social_lstm/save/1/social_model.ckpt-0.data-00000-of-00001" beforeDir="false" afterPath="$PROJECT_DIR$/Original project revised/social_lstm/save/1/social_model.ckpt-0.data-00000-of-00001" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Original project revised/social_lstm/save/1/social_model.ckpt-0.index" beforeDir="false" afterPath="$PROJECT_DIR$/Original project revised/social_lstm/save/1/social_model.ckpt-0.index" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Original project revised/social_lstm/save/1/social_model.ckpt-0.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Original project revised/social_lstm/save/1/social_model.ckpt-0.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Original project revised/social_lstm/social_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/Original project revised/social_lstm/social_model.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Original project revised/social_lstm/social_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/Original project revised/social_lstm/social_train.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Original project revised/social_lstm/social_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/Original project revised/social_lstm/social_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../linux_command.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../linux_command.txt" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />

@@ -45,10 +45,10 @@ p16
 F0.0005
 sS'batch_size'
 p17
-I16
+I20
 sS'num_epochs'
 p18
-I2
+I1
 sS'model'
 p19
 S'lstm'

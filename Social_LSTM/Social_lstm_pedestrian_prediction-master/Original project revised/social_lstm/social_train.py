@@ -26,13 +26,13 @@ def main():
     parser.add_argument('--model', type=str, default='lstm',
                         help='rnn, gru, or lstm')
     # Size of each batch parameter
-    parser.add_argument('--batch_size', type=int, default=16, #default 16
+    parser.add_argument('--batch_size', type=int, default=20, #default 16
                         help='minibatch size')
     # Length of sequence to be considered parameter
     parser.add_argument('--seq_length', type=int, default=2,   #default 20
                         help='RNN sequence length')
     # Number of epochs parameter
-    parser.add_argument('--num_epochs', type=int, default=2,    #before the default was 50
+    parser.add_argument('--num_epochs', type=int, default=1,    #before the default was 50
                         help='number of epochs')
     # Frequency at which the model should be saved parameter
     parser.add_argument('--save_every', type=int, default=400,
@@ -61,7 +61,7 @@ def main():
     parser.add_argument('--grid_size', type=int, default=4, #default 4
                         help='Grid size of the social grid')
     # Maximum number of pedestrians to be considered
-    parser.add_argument('--maxNumPeds', type=int, default=70,
+    parser.add_argument('--maxNumPeds', type=int, default=70,  #default 70
                         help='Maximum Number of Pedestrians')
     # The leave out dataset
     parser.add_argument('--leaveDataset', type=int, default=1,
@@ -76,7 +76,7 @@ def main():
 def train(args):
     datasets = range(5)
     # Remove the leaveDataset from datasets
-    datasets.remove(args.leaveDataset)  #dataset=[1,2,3,4]
+    datasets.remove(args.leaveDataset)  #如果dataset0被剔除的话，dataset=[1,2,3,4]
 
     # Create the SocialDataLoader object
     data_loader = SocialDataLoader(args.batch_size, args.seq_length, args.maxNumPeds, datasets, forcePreProcess=True, infer=False)
@@ -276,3 +276,10 @@ def train(args):
 
 if __name__ == '__main__':
     main()
+
+
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        writer = tf.summary.FileWriter("logs/", sess.graph)
+    writer.close()
+
