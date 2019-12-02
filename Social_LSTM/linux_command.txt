@@ -25,6 +25,7 @@ conda deactivate
 conda env remove -n py36
 conda env list
 conda info --envs
+conda remove -n py36 --all  删除某个env
 conda list 查看安装了什么包	
 
 #安装tensorflow
@@ -112,7 +113,7 @@ git init  #这个命令可以把当前目录变成git可以管理的仓库,使�
 4.Git 每次提交代码，都要写 Commit message（提交说明），否则就不允许提交
 git commit -m "first commit"   
 5.git remote add origin git@github.com:junjieinkit/Social_LSTM.git  添加远程文件夹的地址
-6.将本地仓库的文件push到远程仓库中，指令如下：git push -u origin master 
+6.将本地仓库的文件push到远程仓库中，指令如下：git push -u origin dev (注意这里不用git push -u origin master 可能是因为master不能被改变(除了merge?) )
 7.之后可以简化为git push 或 git pull
 
 
@@ -132,6 +133,23 @@ git reset --hard xxx(版本号或版本号前几位) filename，回滚某个文�
 创建远程分支并将本地分支的东西传到该分支上 git push origin dev:dev  （注意：冒号前为远程分支，冒号后为本地分支，两者必须同名）
 
 git remote -v 查看origin指向哪个远程repository（当初git clone的那个）
+
+
+
+#如何使用ipdb调试
+参考https://www.codercto.com/a/45804.html
+
+#安装cuda
+由于我的显卡驱动是384.130，只支持cuda9.0 
+进入https://developer.nvidia.com/cuda-90-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1604&target_type=runfilelocal
+下载cuda9.0
+然后运行sudo sh cuda_9.0.176_384.81_linux.run
+不用安装nvidia accelerated Graphics Driver  （参考https://blog.csdn.net/wf19930209/article/details/81879514）
+
+#安装cudnn
+找符合cuda9.0的cudnn版本  （https://developer.nvidia.com/rdp/cudnn-archive） 安装3个deb包（https://blog.csdn.net/m0_37924639/article/details/78785699）
+解压deb包（https://docs.nvidia.com/deeplearning/sdk/cudnn-install/index.html#install-linux）然后验证是否安装成功。
+
 
 
 

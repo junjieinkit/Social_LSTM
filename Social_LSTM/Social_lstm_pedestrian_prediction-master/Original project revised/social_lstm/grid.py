@@ -1,3 +1,4 @@
+# coding=utf-8
 '''
 Helper functions to compute the masks relevant to social grid
 
@@ -16,15 +17,19 @@ def getGridMask(frame, dimensions, neighborhood_size, grid_size):
     dimensions : This will be a list [width, height]
     neighborhood_size : Scalar value representing the size of neighborhood considered
     grid_size : Scalar value representing the size of the grid discretization
+    以当前的行人（pedindex）为中心，画栅格图，大小为grid_size*grid_size。依次判断其他人（otherpedindex）时候在当前行人（pedindex）的范围内（gird*grid）。
+    若在，则该邻居（otherpedindex）所在的格子（cell_x，cell_y)赋1
     '''
 
     # Maximum number of pedestrians
     mnp = frame.shape[0]
-    width, height = dimensions[0], dimensions[1]
+    width, height = dimensions[0], dimensions[1]  #113
 
     frame_mask = np.zeros((mnp, mnp, grid_size**2))
 
-    width_bound, height_bound = neighborhood_size/(width*1.0), neighborhood_size/(height*1.0)
+    width_bound, height_bound = neighborhood_size/(width*1.0), neighborhood_size/(height*1.0)  #QUESTION: 有什么含义
+    #width_bound,height_bound的单位就是米，是一个人在实际场景中考虑横坐标和纵坐标内的邻居。   width,heigth可能跟图片的比例尺有关系。
+    #neighborhood_size也只是一个调节的指标，并不是说考虑某个人身边的neighborhood_size个行人。
 
     # For each ped in the frame (existent and non-existent)
     for pedindex in range(mnp):
@@ -62,7 +67,7 @@ def getGridMask(frame, dimensions, neighborhood_size, grid_size):
             cell_y = int(np.floor(((other_y - height_low)/height_bound) * grid_size))
 
             # Other ped is in the corresponding grid cell of current ped
-            frame_mask[pedindex, otherpedindex, cell_x + cell_y*grid_size] = 1
+            frame_mask[pedindex, otherpedindex, cell_x + cell_y*grid_size] = 1  #QUESTION: 我觉得这里有点问题。
 
     return frame_mask
 

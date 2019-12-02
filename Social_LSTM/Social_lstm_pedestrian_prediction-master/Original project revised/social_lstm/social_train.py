@@ -29,10 +29,10 @@ def main():
     parser.add_argument('--batch_size', type=int, default=16, #default 16
                         help='minibatch size')
     # Length of sequence to be considered parameter
-    parser.add_argument('--seq_length', type=int, default=20,   #default 12
+    parser.add_argument('--seq_length', type=int, default=2,   #default 20
                         help='RNN sequence length')
     # Number of epochs parameter
-    parser.add_argument('--num_epochs', type=int, default=2,    #before the default was 50
+    parser.add_argument('--num_epochs', type=int, default=50,    #before the default was 50
                         help='number of epochs')
     # Frequency at which the model should be saved parameter
     parser.add_argument('--save_every', type=int, default=400,
@@ -61,10 +61,10 @@ def main():
     parser.add_argument('--grid_size', type=int, default=4, #default 4
                         help='Grid size of the social grid')
     # Maximum number of pedestrians to be considered
-    parser.add_argument('--maxNumPeds', type=int, default=70,
+    parser.add_argument('--maxNumPeds', type=int, default=70,  #default 70
                         help='Maximum Number of Pedestrians')
     # The leave out dataset
-    parser.add_argument('--leaveDataset', type=int, default=0,
+    parser.add_argument('--leaveDataset', type=int, default=1,
                         help='The dataset index to be left out in training')
     # Lambda regularization parameter (L2)
     parser.add_argument('--lambda_param', type=float, default=0.0005,
@@ -76,7 +76,7 @@ def main():
 def train(args):
     datasets = range(5)
     # Remove the leaveDataset from datasets
-    datasets.remove(args.leaveDataset)
+    datasets.remove(args.leaveDataset)  #如果dataset0被剔除的话，dataset=[1,2,3,4]
 
     # Create the SocialDataLoader object
     data_loader = SocialDataLoader(args.batch_size, args.seq_length, args.maxNumPeds, datasets, forcePreProcess=True, infer=False)
@@ -99,18 +99,31 @@ def train(args):
     # Create a SocialModel object with the arguments
     model = SocialModel(args)
 
+
+    #tf.ConfigProto()函数用在创建session的时候，用来对session进行参数配置
     config = tf.ConfigProto()
+
+    #动态申请显存
     config.gpu_options.allow_growth=True
+
+    #设置tf.ConfigProto()中参数log_device_placement = True ,可以获取到 operations 和 Tensor 被指派到哪个设备(几号CPU或几号GPU)上运行,
+    # 会在终端打印出各项操作是在哪个设备上运行的。
     config=tf.ConfigProto(log_device_placement=True) # Showing which device is allocated (in case of multiple GPUs)
-    config.gpu_options.per_process_gpu_memory_fraction = 0.5 # Allocating 20% of memory in each GPU with 0.5
+
+    # #限制GPU使用率
+    # config.gpu_options.per_process_gpu_memory_fraction = 0.5 # Allocating 20% of memory in each GPU with 0.5
+
+
+
     # Initialize a TensorFlow session
-    with tf.Session() as sess:
+    with tf.Session(config=config) as sess:
         # Initialize all variables in the graph
         # Nella versione di tf<1.0 era : sess.run(tf.initialize_all_variables())
         sess.run(tf.global_variables_initializer())
         # Initialize a saver that saves all the variables in the graph
 
         # Nella versione di tf<1.0 era : saver = tf.train.Saver(tf.all_variables(), max_to_keep=None)
+
         # saver = tf.train.Saver(tf.global_variables(), max_to_keep=None)
         saver = tf.train.Saver(tf.global_variables(), max_to_keep=1)  # max_to_keep: maximum number of trained model(parameter) are stored
 
@@ -154,16 +167,19 @@ def train(args):
                     x_batch, y_batch, d_batch = x[each_seq], y[each_seq], d[each_seq]
 
                     if d_batch == 0 and datasets[0] == 0:
-                        dataset_data = [640, 480]  #QUESTION   why？？
+                        dataset_data = [640, 480]  #QUESTION
+                                                    #可能是因为图片大小不一样？  第0个dataset的图片要小一点？
                     else:
                         dataset_data = [720, 576]
 
+                    #该序列下，由每帧一个的frame_mask组成的sequence_mask
                     grid_batch = getSequenceGridMask(x_batch, dataset_data, args.neighborhood_size, args.grid_size)
 
                     # Feed the source, target data
                     feed = {model.input_data: x_batch, model.target_data: y_batch, model.grid_data: grid_batch}
 
                     train_loss, _ = sess.run([model.cost, model.train_op], feed)    #QUESTION   what is _    ?
+                                                                             #类似与matlab中的ans。即输出值不用赋给变量（我们不关心这个输出是什么）
 
                     loss_batch += train_loss
 
@@ -261,4 +277,15 @@ def train(args):
 
 
 if __name__ == '__main__':
+    tf.reset_default_graph
+
     main()
+
+
+
+
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        writer = tf.summary.FileWriter("logs/", sess.graph)
+    writer.close()
+
