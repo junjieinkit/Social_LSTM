@@ -44,6 +44,7 @@ class SocialModel():
         # to the model is always a sequence of frames
         #现在假设，batch_size始终为1。也就是说，模型的输入始终为帧序列
 
+<<<<<<< HEAD
         #自己加的
         #tf.reset_default_graph() # To clear the defined variables and operations of the previous cell
 
@@ -54,6 +55,205 @@ class SocialModel():
                 cell = rnn_cell.BasicLSTMCell(args.rnn_size, state_is_tuple=False)   #def __init__(self,num_units,forget_bias=1.0,......）
                 # if not infer and args.keep_prob < 1:
                 # cell = rnn_cell.DropoutWrapper(cell, output_keep_prob=args.keep_prob)
+=======
+        # Construct the basicLSTMCell recurrent unit with a dimension given by args.rnn_size
+        with tf.name_scope("LSTM_cell"):  #QUESTION: rnn_size到底是什么
+            cell = rnn_cell.BasicLSTMCell(args.rnn_size, state_is_tuple=False)   #def __init__(self,num_units,forget_bias=1.0,......）
+            # if not infer and args.keep_prob < 1:
+            # cell = rnn_cell.DropoutWrapper(cell, output_keep_prob=args.keep_prob)
+
+        # placeholders for the input data and the target data
+        # A sequence contains an ordered set of consecutive frames
+        # Each frame can contain a maximum of 'args.maxNumPeds' number of peds
+        # For each ped we have their (pedID, x, y) positions as input
+        self.input_data = tf.placeholder(tf.float32, [args.seq_length, args.maxNumPeds, 3], name="input_data")
+
+        # target data would be the same format as input_data except with
+        # one time-step ahead
+        self.target_data = tf.placeholder(tf.float32, [args.seq_length, args.maxNumPeds, 3], name="target_data")
+
+        # Grid data would be a binary matrix which encodes whether a pedestrian is present in
+        # a grid cell of other pedestrian
+        self.grid_data = tf.placeholder(tf.float32, [args.seq_length, args.maxNumPeds, args.maxNumPeds, args.grid_size*args.grid_size], name="grid_data")
+
+        # Variable to hold the value of the learning rate
+        self.lr = tf.Variable(args.learning_rate, trainable=False, name="learning_rate")
+
+        # Output dimension of the model
+        self.output_size = 5
+
+        # Define embedding and output layers
+        self.define_embedding_and_output_layers(args)
+
+        # Define LSTM states for each pedestrian
+        with tf.variable_scope("LSTM_states"):
+            self.LSTM_states = tf.zeros([args.maxNumPeds, cell.state_size], name="LSTM_states")    #state_size 此时是256.  之前好像说了是rnn_size的两倍#QUESTION
+            # Nella versione di tf<1.0 era :self.initial_states = tf.split(0, args.maxNumPeds, self.LSTM_states)
+            self.initial_states = tf.split(self.LSTM_states, args.maxNumPeds, 0 )   #是一个长度为 arg.maxNumPeds 的list
+            #self.LSTM_states.shape=(args.maxNumpeds,256),,,,256为128*2   #QUESTION：跟是不是tuple有关系
+
+        # Define hidden output states for each pedestrian
+        with tf.variable_scope("Hidden_states"):
+            # Nella versione di tf<1.0 era : self.output_states = tf.split(0, args.maxNumPeds, tf.zeros([args.maxNumPeds, cell.output_size]))
+            self.output_states = tf.split(tf.zeros([args.maxNumPeds, cell.output_size]), args.maxNumPeds,0 )  #变成了maxNumPeds个【1,cell_output_size】
+
+
+        # List of tensors each of shape args.maxNumPedsx3 corresponding to each frame in the sequence
+        with tf.name_scope("frame_data_tensors"):
+            # Nella versione di tf<1.0 era : frame_data = [tf.squeeze(input_, [0]) for input_ in tf.split(0, args.seq_length, self.input_data)]
+            #frame_data is a list.
+            frame_data = [tf.squeeze(input_, [0]) for input_ in tf.split(self.input_data, args.seq_length, 0)]   #len(frame_data)=args.seq_length
+
+
+        #QUESTION: 问题就出在这里。调试的时候显示frame_data=20.而运行的时候frame=19时就出现问题。说明frame=20后的数据有问题。
+        #数据没有问题。是因为arg里面就定义了seq_length是20
+
+        with tf.name_scope("frame_target_data_tensors"):
+            # Nella versione di tf<1.0 era : frame_target_data = [tf.squeeze(target_, [0]) for target_ in tf.split(0, args.seq_length, self.target_data)]
+            frame_target_data = [tf.squeeze(target_, [0]) for target_ in tf.split(self.target_data, args.seq_length, 0)]
+
+        with tf.name_scope("grid_frame_data_tensors"):
+            # This would contain a list of tensors each of shape MNP x MNP x (GS**2) encoding the mask
+            # Nella versione di tf<1.0 era : grid_frame_data = [tf.squeeze(input_, [0]) for input_ in tf.split(0, args.seq_length, self.grid_data)]
+            grid_frame_data = [tf.squeeze(input_, [0]) for input_ in tf.split(self.grid_data, args.seq_length, 0)]
+
+        # Cost   #QUESTION： 下面这三个东西有什么用
+        #统计所有帧内，所有行人的cost的总和
+        with tf.name_scope("Cost_related_stuff"):
+            self.cost = tf.constant(0.0, name="cost")
+            self.counter = tf.constant(0.0, name="counter")
+            self.increment = tf.constant(1.0, name="increment")
+
+        # Containers to store output distribution parameters
+        with tf.name_scope("Distribution_parameters_stuff"):
+            # Nella versione di tf<1.0 era self.initial_output = tf.split(0, args.maxNumPeds, tf.zeros([args.maxNumPeds, self.output_size]))
+            self.initial_output = tf.split(tf.zeros([args.maxNumPeds, self.output_size]), args.maxNumPeds, 0 )
+
+        # Tensor to represent non-existent ped
+        with tf.name_scope("Non_existent_ped_stuff"):
+            nonexistent_ped = tf.constant(0.0, name="zero_ped")
+
+        # Iterate over each frame in the sequence
+        for seq, frame in enumerate(frame_data):
+            print "Frame number", seq
+
+            current_frame_data = frame  # MNP x 3 tensor
+            current_grid_frame_data = grid_frame_data[seq]  # MNP x MNP x (GS**2) tensor
+            social_tensor = self.getSocialTensor(current_grid_frame_data, self.output_states)  # MNP x (GS**2 * RNN_size)
+            # NOTE: Using a tensor of zeros as the social tensor
+            # social_tensor = tf.zeros([args.maxNumPeds, args.grid_size*args.grid_size*args.rnn_size])
+
+
+            for ped in range(args.maxNumPeds):
+                print "Pedestrian Number", ped
+
+
+                # pedID of the current pedestrian
+                pedID = current_frame_data[ped, 0]
+
+                with tf.name_scope("extract_input_ped"):
+                    # Extract x and y positions of the current ped of current frame
+                    self.spatial_input = tf.slice(current_frame_data, [ped, 1], [1, 2])  # Tensor of shape (1,2)
+                    # Extract the social tensor of the current ped
+                    self.tensor_input = tf.slice(social_tensor, [ped, 0], [1, args.grid_size*args.grid_size*args.rnn_size])  # Tensor of shape (1, g*g*r)
+
+
+                with tf.name_scope("embeddings_operations"):
+                    #self.spatial_input.shape=(1,2),self.embedding_w.shape=(2,64)
+                    # Embed the spatial input
+                    embedded_spatial_input = tf.nn.relu(tf.nn.xw_plus_b(self.spatial_input, self.embedding_w, self.embedding_b))
+                    # Embed the tensor input
+                    embedded_tensor_input = tf.nn.relu(tf.nn.xw_plus_b(self.tensor_input, self.embedding_t_w, self.embedding_t_b))
+                    #embedded_spatial_input.shape=(1,64); embedded_tensor_input.shape=(1,64)
+
+
+                with tf.name_scope("concatenate_embeddings"):
+                    # Concatenate the embeddings
+                    # Nella versione di tf<1.0 era : complete_input = tf.concat(1, [embedded_spatial_input, embedded_tensor_input])
+                    complete_input = tf.concat([embedded_spatial_input, embedded_tensor_input], 1)
+                    #complete_input =(1,128)
+
+                # One step of LSTM   #为某个行人 更新状态。
+                with tf.variable_scope("LSTM") as scope:
+                    if seq > 0 or ped > 0:
+                        scope.reuse_variables()                #ATTENTION
+                    self.output_states[ped], self.initial_states[ped] = cell(complete_input, self.initial_states[ped])
+                    #len(output_states)=maxNumPeds=70       self.output_states[ped].shape=（1，rnn_size）=（1，128）
+                    #self.initial_states[ped].shape=(1,256)
+
+
+                # with tf.name_scope("reshape_output"):
+                # Store the output hidden state for the current pedestrian
+                #    self.output_states[ped] = tf.reshape(tf.concat(1, output), [-1, args.rnn_size])
+                #    print self.output_states[ped]
+
+                # Apply the linear layer. Output would be a tensor of shape 1 x output_size
+                with tf.name_scope("output_linear_layer"):
+                    self.initial_output[ped] = tf.nn.xw_plus_b(self.output_states[ped], self.output_w, self.output_b)
+                    #self.output_states[ped].shape=（1,5）
+
+                # with tf.name_scope("store_distribution_parameters"):
+                #    # Store the distribution parameters for the current ped
+                #    self.initial_output[ped] = output
+
+                with tf.name_scope("extract_target_ped"):
+                    # Extract x and y coordinates of the target data
+                    # x_data and y_data would be tensors of shape 1 x 1
+                    # Nella versione di tf<1.0 era : [x_data, y_data] = tf.split(1, 2, tf.slice(frame_target_data[seq], [ped, 1], [1, 2]))
+                    [x_data, y_data] = tf.split(tf.slice(frame_target_data[seq], [ped, 1], [1, 2]), 2, 1)
+                    target_pedID = frame_target_data[seq][ped, 0]
+
+                with tf.name_scope("get_coef"):   #QUESTION： 为什么要对输出做非线性变换？
+                    # Extract coef from output of the linear output layer
+                    [o_mux, o_muy, o_sx, o_sy, o_corr] = self.get_coef(self.initial_output[ped])
+
+                with tf.name_scope("calculate_loss"):
+                    # Calculate loss for the current ped
+                    lossfunc = self.get_lossfunc(o_mux, o_muy, o_sx, o_sy, o_corr, x_data, y_data)
+
+                with tf.name_scope("increment_cost"):
+                    # If it is a non-existent ped, it should not contribute to cost
+                    # If the ped doesn't exist in the next frame, he/she should not contribute to cost as well
+
+                    # Nella versione di tf<1.0 era : self.cost = tf.select(tf.logical_or(tf.equal(pedID, nonexistent_ped), tf.equal(target_pedID, nonexistent_ped)), self.cost, tf.add(self.cost, lossfunc))
+                    #tf.where(): 返回值：如果x、y不为空的话，返回值和x、y有相同的形状，如果condition对应位置值为True那么返回Tensor对应位置为x的值，否则为y的值.
+                    self.cost = tf.where(
+                        tf.logical_or(tf.equal(pedID, nonexistent_ped), tf.equal(target_pedID, nonexistent_ped)),self.cost, tf.add(self.cost, lossfunc))   #如果当前的新人有与之相应的target，则计算cost
+
+                    # Nella versione di tf<1.0 era : self.counter = tf.select(tf.logical_or(tf.equal(pedID, nonexistent_ped), tf.equal(target_pedID, nonexistent_ped)), self.counter, tf.add(self.counter, self.increment))
+                    self.counter = tf.where(
+                        tf.logical_or(tf.equal(pedID, nonexistent_ped), tf.equal(target_pedID, nonexistent_ped)),
+                        self.counter, tf.add(self.counter, self.increment))
+
+
+
+        with tf.name_scope("mean_cost"):
+            # Mean of the cost
+            self.cost = tf.div(self.cost, self.counter)
+
+        # Get all trainable variables
+        tvars = tf.trainable_variables()   #返回的是所有变量的列表
+
+        # L2 loss
+        l2 = args.lambda_param*sum(tf.nn.l2_loss(tvar) for tvar in tvars)
+        self.cost = self.cost + l2
+
+        # Get the final LSTM states
+        # Nella versione di tf<1.0 era : self.final_states = tf.concat(0, self.initial_states)
+        self.final_states = tf.concat(self.initial_states, 0)
+        #self.final_states.shape=(70,256)   len(self.initial_states)=70   list里面的元素是（1，256）
+
+
+        # Get the final distribution parameters
+        self.final_output = self.initial_output
+
+        # Compute gradients
+        self.gradients = tf.gradients(self.cost, tvars)         #ATTENTION：实现self.cost对tvars求导
+
+        # Clip the gradients
+        grads, _ = tf.clip_by_global_norm(self.gradients, args.grad_clip)  #让权重的更新限制在一个合适的范围
+        #QUESTION： 这个 _  是什么
+>>>>>>> 9901b98f81107e43585f93384135ad0eaf20677e
 
             # placeholders for the input data and the target data
             # A sequence contains an ordered set of consecutive frames
@@ -61,9 +261,16 @@ class SocialModel():
             # For each ped we have their (pedID, x, y) positions as input
             self.input_data = tf.placeholder(tf.float32, [args.seq_length, args.maxNumPeds, 3], name="input_data")
 
+<<<<<<< HEAD
             # target data would be the same format as input_data except with
             # one time-step ahead
             self.target_data = tf.placeholder(tf.float32, [args.seq_length, args.maxNumPeds, 3], name="target_data")
+=======
+        # The train operator
+        self.train_op = optimizer.apply_gradients(zip(grads, tvars))     #zip() 函数用于将可迭代的对象作为参数，将对象中对应的元素
+                                                                         #打包成一个个元组，然后返回由这些元组组成的列表。
+
+>>>>>>> 9901b98f81107e43585f93384135ad0eaf20677e
 
             # Grid data would be a binary matrix which encodes whether a pedestrian is present in
             # a grid cell of other pedestrian

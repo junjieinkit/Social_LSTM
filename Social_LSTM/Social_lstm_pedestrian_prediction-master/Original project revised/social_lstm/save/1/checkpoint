@@ -1,2 +1,7 @@
+<<<<<<< HEAD
 model_checkpoint_path: "social_model.ckpt-2"
 all_model_checkpoint_paths: "social_model.ckpt-2"
+=======
+model_checkpoint_path: "social_model.ckpt-0"
+all_model_checkpoint_paths: "social_model.ckpt-0"
+>>>>>>> 9901b98f81107e43585f93384135ad0eaf20677e

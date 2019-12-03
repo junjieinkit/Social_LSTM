@@ -23,7 +23,7 @@ def getGridMask(frame, dimensions, neighborhood_size, grid_size):
 
     # Maximum number of pedestrians
     mnp = frame.shape[0]
-    width, height = dimensions[0], dimensions[1]
+    width, height = dimensions[0], dimensions[1]  #113
 
     frame_mask = np.zeros((mnp, mnp, grid_size**2))
 

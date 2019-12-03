@@ -30,7 +30,11 @@ p11
 I1
 sS'seq_length'
 p12
+<<<<<<< HEAD
 I10
+=======
+I2
+>>>>>>> 9901b98f81107e43585f93384135ad0eaf20677e
 sS'maxNumPeds'
 p13
 I70
@@ -45,10 +49,17 @@ p16
 F0.0005
 sS'batch_size'
 p17
+<<<<<<< HEAD
 I8
 sS'num_epochs'
 p18
 I50
+=======
+I20
+sS'num_epochs'
+p18
+I1
+>>>>>>> 9901b98f81107e43585f93384135ad0eaf20677e
 sS'model'
 p19
 S'lstm'

@@ -26,6 +26,7 @@ def main():
     parser.add_argument('--model', type=str, default='lstm',
                         help='rnn, gru, or lstm')
     # Size of each batch parameter
+<<<<<<< HEAD
     parser.add_argument('--batch_size', type=int, default=8, #default 16
                         help='minibatch size')
     # Length of sequence to be considered parameter
@@ -33,6 +34,15 @@ def main():
                         help='RNN sequence length')
     # Number of epochs parameter
     parser.add_argument('--num_epochs', type=int, default=50,    #before the default was 50
+=======
+    parser.add_argument('--batch_size', type=int, default=20, #default 16
+                        help='minibatch size')
+    # Length of sequence to be considered parameter
+    parser.add_argument('--seq_length', type=int, default=2,   #default 20
+                        help='RNN sequence length')
+    # Number of epochs parameter
+    parser.add_argument('--num_epochs', type=int, default=1,    #before the default was 50
+>>>>>>> 9901b98f81107e43585f93384135ad0eaf20677e
                         help='number of epochs')
     # Frequency at which the model should be saved parameter
     parser.add_argument('--save_every', type=int, default=400,
@@ -100,9 +110,15 @@ def train(args):
     # Create a SocialModel object with the arguments
     model = SocialModel(args)   #自己改的，之前是在config = tf.ConfigProto() 前面
 
+<<<<<<< HEAD
     #tf.ConfigProto()函数用在创建session的时候，用来对session进行参数配置
     config = tf.ConfigProto()
 
+=======
+
+
+    config = tf.ConfigProto()
+>>>>>>> 9901b98f81107e43585f93384135ad0eaf20677e
     #动态申请显存
     config.gpu_options.allow_growth=True
 
@@ -110,12 +126,19 @@ def train(args):
     # 会在终端打印出各项操作是在哪个设备上运行的。
     config=tf.ConfigProto(log_device_placement=True) # Showing which device is allocated (in case of multiple GPUs)
 
+<<<<<<< HEAD
     # #限制GPU使用率
     config.gpu_options.per_process_gpu_memory_fraction = 0.5 # Allocating 20% of memory in each GPU with 0.5
 
 
 
 
+=======
+    #限制GPU使用率
+    config.gpu_options.per_process_gpu_memory_fraction = 0.5 # Allocating 20% of memory in each GPU with 0.5
+
+
+>>>>>>> 9901b98f81107e43585f93384135ad0eaf20677e
     # Initialize a TensorFlow session
     with tf.Session(config=config) as sess:
 
@@ -285,3 +308,10 @@ if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
     main()
+
+
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        writer = tf.summary.FileWriter("logs/", sess.graph)
+    writer.close()
+
