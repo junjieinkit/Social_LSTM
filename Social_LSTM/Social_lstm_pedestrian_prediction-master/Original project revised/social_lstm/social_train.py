@@ -26,10 +26,10 @@ def main():
     parser.add_argument('--model', type=str, default='lstm',
                         help='rnn, gru, or lstm')
     # Size of each batch parameter
-    parser.add_argument('--batch_size', type=int, default=16, #default 16
+    parser.add_argument('--batch_size', type=int, default=8, #default 16
                         help='minibatch size')
     # Length of sequence to be considered parameter
-    parser.add_argument('--seq_length', type=int, default=2,   #default 20
+    parser.add_argument('--seq_length', type=int, default=10,   #default 20
                         help='RNN sequence length')
     # Number of epochs parameter
     parser.add_argument('--num_epochs', type=int, default=50,    #before the default was 50
@@ -96,9 +96,9 @@ def train(args):
     with open(os.path.join(save_directory, 'social_config.pkl'), 'wb') as f:
         pickle.dump(args, f)
 
-    # Create a SocialModel object with the arguments
-    model = SocialModel(args)
 
+    # Create a SocialModel object with the arguments
+    model = SocialModel(args)   #自己改的，之前是在config = tf.ConfigProto() 前面
 
     #tf.ConfigProto()函数用在创建session的时候，用来对session进行参数配置
     config = tf.ConfigProto()
@@ -111,12 +111,16 @@ def train(args):
     config=tf.ConfigProto(log_device_placement=True) # Showing which device is allocated (in case of multiple GPUs)
 
     # #限制GPU使用率
-    # config.gpu_options.per_process_gpu_memory_fraction = 0.5 # Allocating 20% of memory in each GPU with 0.5
+    config.gpu_options.per_process_gpu_memory_fraction = 0.5 # Allocating 20% of memory in each GPU with 0.5
+
 
 
 
     # Initialize a TensorFlow session
     with tf.Session(config=config) as sess:
+
+
+
         # Initialize all variables in the graph
         # Nella versione di tf<1.0 era : sess.run(tf.initialize_all_variables())
         sess.run(tf.global_variables_initializer())
@@ -277,15 +281,7 @@ def train(args):
 
 
 if __name__ == '__main__':
-    tf.reset_default_graph
+
+    os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 
     main()
-
-
-
-
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        writer = tf.summary.FileWriter("logs/", sess.graph)
-    writer.close()
-

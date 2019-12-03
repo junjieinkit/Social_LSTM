@@ -42,8 +42,10 @@ class SocialModel():
 
         # NOTE : For now assuming, batch_size is always 1. That is the input
         # to the model is always a sequence of frames
+        #现在假设，batch_size始终为1。也就是说，模型的输入始终为帧序列
 
-        tf.reset_default_graph() # To clear the defined variables and operations of the previous cell
+        #自己加的
+        #tf.reset_default_graph() # To clear the defined variables and operations of the previous cell
 
         with tf.Session() as sess:
 
@@ -77,10 +79,10 @@ class SocialModel():
             self.define_embedding_and_output_layers(args)
 
             # Define LSTM states for each pedestrian
-            with tf.variable_scope("LSTM_states"):
+            with tf.variable_scope("initial_LSTM_states"):
                 self.LSTM_states = tf.zeros([args.maxNumPeds, cell.state_size], name="LSTM_states")    #state_size 此时是256.  之前好像说了是rnn_size的两倍#QUESTION
                 # Nella versione di tf<1.0 era :self.initial_states = tf.split(0, args.maxNumPeds, self.LSTM_states)
-                self.initial_states = tf.split(self.LSTM_states, args.maxNumPeds, 0 )   #是一个长度为 arg.maxNumPeds 的list
+                self.initial_states = tf.split(self.LSTM_states, args.maxNumPeds, 0 )   #是一个长度为 arg.maxNumPeds 的list,list中每个元素是某个行人的LSTM state
                 #self.LSTM_states.shape=(args.maxNumpeds,256),,,,256为128*2   #QUESTION：跟是不是tuple有关系
 
             # Define hidden output states for each pedestrian
@@ -166,7 +168,7 @@ class SocialModel():
                             #complete_input =(1,128)
 
                         # One step of LSTM   #为某个行人 更新状态。
-                        with tf.variable_scope("LSTM") as scope:
+                        with tf.variable_scope("reused_LSTM") as scope:
                             if seq > 0 or ped > 0:
                                 scope.reuse_variables()                #ATTENTION
                             self.output_states[ped], self.initial_states[ped] = cell(complete_input, self.initial_states[ped])
@@ -239,8 +241,7 @@ class SocialModel():
             tvars = tf.trainable_variables()   #返回的是所有变量的列表
 
 
-            # ATTENTION
-            ipdb.set_trace()
+
 
             # L2 loss
             l2 = args.lambda_param*sum(tf.nn.l2_loss(tvar) for tvar in tvars)
@@ -268,13 +269,10 @@ class SocialModel():
             # The train operator
             self.train_op = optimizer.apply_gradients(zip(grads, tvars))     #zip() 函数用于将可迭代的对象作为参数，将对象中对应的元素
                                                                              #打包成一个个元组，然后返回由这些元组组成的列表。
-
-            writer = tf.summary.FileWriter("logs/", sess.graph)
+            #instrument tensorboard
+            writer = tf.summary.FileWriter("/home/jwei/tensorboard_events/", sess.graph)
             writer.add_graph(sess.graph)
 
-
-            #ATTENTION
-            ipdb.set_trace()
 
             # Merge all summmaries
             # merged_summary_op = tf.merge_all_summaries()
@@ -397,30 +395,34 @@ class SocialModel():
 
         # Concatenate list of hidden states to form a tensor of shape MNP x RNN_size
         # Nella versione di tf<1.0 era : hidden_states = tf.concat(0, output_states)
-        hidden_states = tf.concat(output_states, 0)  #QUESTION：怎么做到将hidden_state转化为MNP*RNN_SIZE
+        hidden_states = tf.concat(output_states, 0)
+        #hidden_states.shape=(70,128)=(MNP,rnn_size)
 
-        # Split the grid_frame_data into grid_data for each pedestrians
-        # Consists of a list of tensors each of shape 1 x MNP x (GS**2) of length MNP
-        # Nella versione di tf<1.0 era : grid_frame_ped_data = tf.split(0, self.args.maxNumPeds, grid_frame_data)
-        grid_frame_ped_data = tf.split(grid_frame_data, self.args.maxNumPeds, 0)
+        with tf.name_scope("calculate_social_tensor"):
 
-        # Squeeze tensors to form MNP x (GS**2) matrices
-        grid_frame_ped_data = [tf.squeeze(input_, [0]) for input_ in grid_frame_ped_data]
+            # Split the grid_frame_data into grid_data for each pedestrians
+            # Consists of a list of tensors each of shape 1 x MNP x (GS**2) of length MNP
+            # Nella versione di tf<1.0 era : grid_frame_ped_data = tf.split(0, self.args.maxNumPeds, grid_frame_data)
+            grid_frame_ped_data = tf.split(grid_frame_data, self.args.maxNumPeds, 0)
 
-        # For each pedestrian
-        for ped in range(self.args.maxNumPeds):
-            # Compute social tensor for the current pedestrian
-            #with tf.name_scope("tensor_calculation"):
-            social_tensor_ped = tf.matmul(tf.transpose(grid_frame_ped_data[ped]), hidden_states)
-            social_tensor[ped] = tf.reshape(social_tensor_ped, [1, self.grid_size*self.grid_size, self.rnn_size])
+            # Squeeze tensors to form MNP x (GS**2) matrices
+            grid_frame_ped_data = [tf.squeeze(input_, [0]) for input_ in grid_frame_ped_data]
 
-        # Concatenate the social tensor from a list to a tensor of shape MNP x (GS**2) x RNN_size
-        # Nella versione di tf<1.0 era :  social_tensor = tf.concat(0, social_tensor)
-        social_tensor = tf.concat(social_tensor, 0)
+            # For each pedestrian
+            for ped in range(self.args.maxNumPeds):
+                # Compute social tensor for the current pedestrian
+                with tf.name_scope("tensor_calculation"):
+                    social_tensor_ped = tf.matmul(tf.transpose(grid_frame_ped_data[ped]), hidden_states)
+                    social_tensor[ped] = tf.reshape(social_tensor_ped, [1, self.grid_size*self.grid_size, self.rnn_size])
 
-        # Reshape the tensor to match the dimensions MNP x (GS**2 * RNN_size)
-        social_tensor = tf.reshape(social_tensor, [self.args.maxNumPeds, self.grid_size*self.grid_size*self.rnn_size])
-        return social_tensor
+            # Concatenate the social tensor from a list to a tensor of shape MNP x (GS**2) x RNN_size
+            # Nella versione di tf<1.0 era :  social_tensor = tf.concat(0, social_tensor)
+            social_tensor = tf.concat(social_tensor, 0)
+
+            # Reshape the tensor to match the dimensions MNP x (GS**2 * RNN_size)
+            social_tensor = tf.reshape(social_tensor, [self.args.maxNumPeds, self.grid_size*self.grid_size*self.rnn_size])
+            return social_tensor
+
 
     def sample_gaussian_2d(self, mux, muy, sx, sy, rho):
         '''
